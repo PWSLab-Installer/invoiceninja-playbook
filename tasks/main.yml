@@ -30,6 +30,7 @@
 
 - name: Rename the ninja directory
   command: mv /var/www/ninja /var/www/invoice-ninja
+  ignore_errors: yes
   when:
       - os_check.stdout | regex_search("Ubuntu") or os_check.stdout | regex_search("CentOS")
 
@@ -41,7 +42,17 @@
       owner: www-data
       mode: '0755'
   when:
-      - os_check.stdout | regex_search("Ubuntu") or os_check.stdout | regex_search("CentOS")
+      - os_check.stdout | regex_search("Ubuntu")
+
+- name: Grant permissions
+  file:
+      path: /var/www/invoice-ninja/
+      state: directory
+      recurse: yes
+      owner: nginx
+      mode: '0755'
+  when:
+      - os_check.stdout | regex_search("CentOS")
 
 - name: Sets Nginx conf file - Ubuntu
   become: true
