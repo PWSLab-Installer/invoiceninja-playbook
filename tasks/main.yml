@@ -1,11 +1,11 @@
 ---
 
-- name: Download Node Setup
+- name: Download Invoice Ninja
   get_url:
       url: https://download.invoiceninja.com/
       dest: /tmp/invoice-ninja.zip
   when:
-      - os_check.stdout | regex_search("Ubuntu")
+      - os_check.stdout | regex_search("Ubuntu") or os_check.stdout | regex_search("CentOS")
   
 - name: Install Unzip
   apt:
@@ -14,17 +14,24 @@
   when: 
       - os_check.stdout | regex_search("Ubuntu")
 
+- name: Install Unzip
+  yum:
+      name: unzip
+      state: present
+  when: 
+      - os_check.stdout | regex_search("CentOS")
+
 - name: Extract invoice.ninja into /tmp
   unarchive:
       src: /tmp/invoice-ninja.zip
       dest: /var/www/
   when:
-      - os_check.stdout | regex_search("Ubuntu") 
+      - os_check.stdout | regex_search("Ubuntu") or os_check.stdout | regex_search("CentOS")
 
 - name: Rename the ninja directory
   command: mv /var/www/ninja /var/www/invoice-ninja
   when:
-      - os_check.stdout | regex_search("Ubuntu") 
+      - os_check.stdout | regex_search("Ubuntu") or os_check.stdout | regex_search("CentOS")
 
 - name: Grant permissions
   file:
@@ -34,7 +41,7 @@
       owner: www-data
       mode: '0755'
   when:
-      - os_check.stdout | regex_search("Ubuntu") 
+      - os_check.stdout | regex_search("Ubuntu") or os_check.stdout | regex_search("CentOS")
 
 - name: Sets Nginx conf file - Ubuntu
   become: true
@@ -42,7 +49,7 @@
     src: "nginx.conf.j2"
     dest: "/etc/nginx/sites-available/{{ http_conf }}"
   when:
-        - ubuntu_os.stdout | regex_search("Ubuntu")
+        - os_check.stdout | regex_search("Ubuntu")
 
 - name: Sets Nginx conf file - CentOS
   become: true
@@ -50,7 +57,7 @@
     src: "nginx.conf.j2"
     dest: "/etc/nginx/conf.d/{{ http_conf }}"
   when:
-        - cent_os.stdout | regex_search("CentOS")
+        - os_check.stdout | regex_search("CentOS")
 
 - name: Create the FASTCGI directory
   become: true
@@ -58,7 +65,7 @@
     path: /etc/nginx/snippets/
     state: directory
   when:
-        - cent_os.stdout | regex_search("CentOS")
+        - os_check.stdout | regex_search("CentOS")
 
 - name: Sets FASTCGI conf file - CentOS
   become: true
@@ -66,7 +73,7 @@
     src: "fastcgi-centos.conf.j2"
     dest: "/etc/nginx/snippets/fastcgi-php.conf"
   when:
-        - cent_os.stdout | regex_search("CentOS")
+        - os_check.stdout | regex_search("CentOS")
 
 - name: Sets FASTCGI conf file - CentOS
   become: true
@@ -74,14 +81,14 @@
     src: "fastcgi.conf"
     dest: "/etc/nginx/"
   when:
-        - cent_os.stdout | regex_search("CentOS")
+        - os_check.stdout | regex_search("CentOS")
 
 - name: Remove file (delete file)
   file:
     path: /etc/nginx/conf.d/default.conf
     state: absent
   when:
-          - cent_os.stdout | regex_search("CentOS")
+    - os_check.stdout | regex_search("CentOS")
 
 - name: Enables new site
   become: true
@@ -91,7 +98,7 @@
     state: link
 #   notify: Reload Nginx
   when:
-    - ubuntu_os.stdout | regex_search("Ubuntu")
+    - os_check.stdout | regex_search("Ubuntu")
 
 - name: Removes "default" site
   become: true
@@ -100,4 +107,4 @@
     state: absent
 #   notify: Reload Nginx
   when:
-    - ubuntu_os.stdout | regex_search("Ubuntu")
+    - os_check.stdout | regex_search("Ubuntu")
