@@ -58,7 +58,7 @@
   become: true
   template:
     src: "nginx.conf.j2"
-    dest: "/etc/nginx/sites-available/{{ http_conf }}"
+    dest: "/etc/nginx/sites-available/invoice_ninja"
   when:
         - os_check.stdout | regex_search("Ubuntu")
 
@@ -66,7 +66,7 @@
   become: true
   template:
     src: "nginx.conf.j2"
-    dest: "/etc/nginx/conf.d/{{ http_conf }}"
+    dest: "/etc/nginx/conf.d/invoice_ninja"
   when:
         - os_check.stdout | regex_search("CentOS")
 
@@ -104,8 +104,8 @@
 - name: Enables new site
   become: true
   file:
-    src: "/etc/nginx/sites-available/{{ http_conf }}"
-    dest: "/etc/nginx/sites-enabled/{{ http_conf }}"
+    src: "/etc/nginx/sites-available/invoice_ninja"
+    dest: "/etc/nginx/sites-enabled/invoice_ninja"
     state: link
 #   notify: Reload Nginx
   when:
