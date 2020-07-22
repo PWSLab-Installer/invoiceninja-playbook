@@ -5,13 +5,13 @@
     your_domain_name: localhost
     php_default_version_debian: '7.2'
     php_webserver_daemon: "nginx"
-    mysql_databases: 
-        - name: invoiceninja
-    mysql_users: 
-        - name: ninja
-          host: 127.0.0.1
-          password: ninja
-          priv: invoiceninja.*:ALL
+    # mysql_databases: 
+    #     - name: invoiceninja
+    # mysql_users: 
+    #     - name: ninja
+    #       host: 127.0.0.1
+    #       password: ninja
+    #       priv: invoiceninja.*:ALL
 
   # Roles are imported from ansible
 
