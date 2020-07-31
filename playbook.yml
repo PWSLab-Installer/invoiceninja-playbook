@@ -89,14 +89,6 @@
       register: os_check
       ignore_errors: yes
 
-    - name: Applying replacement on CentOS
-      lineinfile:
-          dest: ~/.ansible/roles/pwslab.php/vars/Debian.yml
-          regexp: '^__php_webserver_daemon: '
-          line: '__php_webserver_daemon: "nginx"'
-          state: present
-      when:
-        - os_check.stdout | regex_search("CentOS")
     
     - name: Applying replacement on Ubuntu
       lineinfile:
@@ -106,6 +98,11 @@
           state: present
       when:
         - os_check.stdout | regex_search("Ubuntu")
+
+    - name: Installing Remi
+      include_role:
+          name: pwslab.repo-remi 
+      when: os_check.stdout | regex_search("CentOS")
 
     - name: Installing NGINX
       include_role:
@@ -117,17 +114,12 @@
           name: pwslab.mysql
       when: not mysql_exists.stat.exists
 
-    - name: Installing Remi
-      include_role:
-          name: pwslab.repo-remi 
-      when: os_check.stdout | regex_search("CentOS")
-
     - name: Installing PHP-Versions
       include_role:
           name: pwslab.php-versions
       when: 
         - not php_exists.stat.exists
-        - not os_check.stdout | regex_search("CentOS Linux release 8")
+        - not os_check.stdout | regex_search("CentOS Linux 8")
 
     - name: Installing PHP
       include_role:
@@ -146,7 +138,7 @@
           line: 'listen = /var/run/php{{ php_version }}-fpm.sock'
           state: present
       when:
-        - os_check.stdout | regex_search("CentOS Linux release 7")
+        - os_check.stdout | regex_search("CentOS Linux 7")
 
     - name: Applying replacement on CentOS
       lineinfile:
@@ -155,7 +147,7 @@
           line: 'listen.owner = nginx'
           state: present
       when:
-        - os_check.stdout | regex_search("CentOS Linux release 7")
+        - os_check.stdout | regex_search("CentOS Linux 7")
 
     - name: Applying replacement on CentOS
       lineinfile:
@@ -164,7 +156,7 @@
           line: 'listen.group = nginx'
           state: present
       when:
-        - os_check.stdout | regex_search("CentOS Linux release 7")
+        - os_check.stdout | regex_search("CentOS Linux 7")
 
     - name: Applying replacement on CentOS
       lineinfile:
@@ -173,38 +165,59 @@
           line: 'listen.mode = 0660'
           state: present
       when:
-        - os_check.stdout | regex_search("CentOS Linux release 7")
+        - os_check.stdout | regex_search("CentOS Linux 7")
 
-    - name: Update php Version 
-      lineinfile:
-          dest: ~/.ansible/roles/pwslab.invoice-ninja/templates/nginx.conf.j2
-          regexp: '^                fastcgi_pass unix:'
-          line: 'fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;'
-          state: present
-      when:
-        - os_check.stdout | regex_search("20.04")
+    # - name: Update php Version 
+    #   lineinfile:
+    #       dest: ~/.ansible/roles/pwslab.invoice-ninja/templates/nginx.conf.j2
+    #       regexp: '^                fastcgi_pass unix:'
+    #       line: 'fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;'
+    #       state: present
+    #   when:
+    #     - os_check.stdout | regex_search("20.04")
 
-    - name: Update php Version 
-      lineinfile:
-          dest: ~/.ansible/roles/pwslab.invoice-ninja/templates/nginx.conf.j2
-          regexp: '^                fastcgi_pass unix:'
-          line: 'fastcgi_pass unix:/var/run/php-fpm/www.sock;'
-          state: present
-      when:
-        - os_check.stdout | regex_search("CentOS Linux release 8")
+    # - name: Update php Version 
+    #   lineinfile:
+    #       dest: ~/.ansible/roles/pwslab.invoice-ninja/templates/nginx.conf.j2
+    #       regexp: '^                fastcgi_pass unix:'
+    #       line: 'fastcgi_pass unix:/var/run/php-fpm/www.sock;'
+    #       state: present
+    #   when:
+    #     - os_check.stdout | regex_search("CentOS Linux 8")
 
-    - name: Update php Version 
-      lineinfile:
-          dest: ~/.ansible/roles/pwslab.invoice-ninja/templates/nginx.conf.j2
-          regexp: '^                fastcgi_pass unix:'
-          line: 'fastcgi_pass unix:/var/run/php{{ php_version }}-fpm.sock;'
-          state: present
-      when:
-        - os_check.stdout | regex_search("CentOS Linux release 7")
+    # - name: Update php Version 
+    #   lineinfile:
+    #       dest: ~/.ansible/roles/pwslab.invoice-ninja/templates/nginx.conf.j2
+    #       regexp: '^                fastcgi_pass unix:'
+    #       line: 'fastcgi_pass unix:/var/run/php{{ php_version }}-fpm.sock;'
+    #       state: present
+    #   when:
+    #     - os_check.stdout | regex_search("CentOS Linux 7")
 
     - name: Installing Invoice Ninja WORDPRESS
       include_role:
         name: pwslab.invoice-ninja
+      vars:
+        php_fastcgi_pass_unix: /var/run/php{{ php_version }}-fpm.sock
+      when:
+        - os_check.stdout | regex_search("CentOS Linux 7")
+        - os_check.stdout | regex_search("Ubuntu 20")
+
+    - name: Installing Invoice Ninja WORDPRESS
+      include_role:
+        name: pwslab.invoice-ninja
+      vars:
+        php_fastcgi_pass_unix: /var/run/php-fpm/www.sock
+      when:
+        - os_check.stdout | regex_search("CentOS Linux 8")
+
+    - name: Installing Invoice Ninja WORDPRESS
+      include_role:
+        name: pwslab.invoice-ninja
+      vars:
+        php_fastcgi_pass_unix: /run/php/php{{ php_version }}-fpm.sock
+      when:
+        - os_check.stdout | regex_search("Ubuntu 18")
 
 
 

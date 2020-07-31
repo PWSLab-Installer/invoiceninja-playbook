@@ -1,5 +1,15 @@
 ---
 
+- name: Create schema for ninja
+  shell: mysql -u root -p'root' -e "CREATE SCHEMA `ninja` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
+
+- name: Create database user with name 'ninja'
+  mysql_user:
+    name: ninja
+    password: ninja
+    priv: 'ninja.*:ALL'
+    state: present
+
 - name: Download Invoice Ninja
   get_url:
       url: https://download.invoiceninja.com/
@@ -7,17 +17,23 @@
   when:
       - os_check.stdout | regex_search("Ubuntu") or os_check.stdout | regex_search("CentOS")
   
-- name: Install Unzip
+- name: Install Essential Packages
   apt:
-      name: unzip
+      name: "{{ item }}"
       state: present
+  loop:
+    - unzip
+    - php{{ php_version }}-mysql
   when: 
       - os_check.stdout | regex_search("Ubuntu")
 
-- name: Install Unzip
+- name: Install Essential Packages
   yum:
-      name: unzip
+      name: "{{ item }}"
       state: present
+  loop:
+    - unzip
+    - php-json
   when: 
       - os_check.stdout | regex_search("CentOS")
 
@@ -40,6 +56,7 @@
       state: directory
       recurse: yes
       owner: www-data
+      group: www-data
       mode: '0755'
   when:
       - os_check.stdout | regex_search("Ubuntu")
@@ -50,6 +67,7 @@
       state: directory
       recurse: yes
       owner: nginx
+      group: nginx
       mode: '0755'
   when:
       - os_check.stdout | regex_search("CentOS")
@@ -66,7 +84,7 @@
   become: true
   template:
     src: "nginx.conf.j2"
-    dest: "/etc/nginx/conf.d/invoice_ninja"
+    dest: "/etc/nginx/conf.d/invoice_ninja.conf"
   when:
         - os_check.stdout | regex_search("CentOS")
 
@@ -119,3 +137,11 @@
 #   notify: Reload Nginx
   when:
     - os_check.stdout | regex_search("Ubuntu")
+
+- name: Disable SELinux
+  selinux:
+    state: disabled
+  when:
+    - os_check.stdout | regex_search("CentOS")
+
+  
