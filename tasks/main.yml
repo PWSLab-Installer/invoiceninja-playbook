@@ -1,7 +1,7 @@
 ---
 
 - name: Create schema for ninja
-  shell: mysql -u root -p'root' -e "CREATE SCHEMA `ninja` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
+  shell: mysql -u root -p'root' -e "CREATE SCHEMA ninja DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
 
 - name: Create database user with name 'ninja'
   mysql_user:
