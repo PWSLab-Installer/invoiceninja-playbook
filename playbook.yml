@@ -201,7 +201,6 @@
         php_fastcgi_pass_unix: /var/run/php{{ php_version }}-fpm.sock
       when:
         - os_check.stdout | regex_search("CentOS Linux 7")
-        - os_check.stdout | regex_search("Ubuntu 20")
 
     - name: Installing Invoice Ninja WORDPRESS
       include_role:
@@ -218,6 +217,14 @@
         php_fastcgi_pass_unix: /run/php/php{{ php_version }}-fpm.sock
       when:
         - os_check.stdout | regex_search("Ubuntu 18")
+
+    - name: Installing Invoice Ninja WORDPRESS
+      include_role:
+        name: pwslab.invoice-ninja
+      vars:
+        php_fastcgi_pass_unix: /var/run/php/php{{ php_version }}-fpm.sock
+      when:
+        - os_check.stdout | regex_search("Ubuntu 20")
 
 
 

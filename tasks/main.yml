@@ -3,12 +3,18 @@
 - name: Create schema for ninja
   shell: mysql -u root -p'root' -e "CREATE SCHEMA ninja DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
 
-- name: Create database user with name 'ninja'
-  mysql_user:
-    name: ninja
-    password: ninja
-    priv: 'ninja.*:ALL'
-    state: present
+- name: Create DB User ninja
+  shell: mysql -u root -p'root' -e "CREATE USER 'ninja'@'localhost' IDENTIFIED BY 'ninja';"
+
+- name: Grant Privs to User ninja
+  shell: mysql -u root -p'root' -e "GRANT ALL PRIVILEGES ON ninja.* TO 'ninja'@'localhost';"
+
+# - name: Create database user with name 'ninja'
+#   mysql_user:
+#     name: ninja
+#     password: ninja
+#     priv: 'ninja.*:ALL'
+#     state: present
 
 - name: Download Invoice Ninja
   get_url:
@@ -27,6 +33,11 @@
   when: 
       - os_check.stdout | regex_search("Ubuntu")
 
+- name: Enable remi repo - CentOS 7
+  command: yum-config-manager --enable remi-php72
+  when: 
+    - os_check.stdout | regex_search("CentOS Linux 7")
+
 - name: Install Essential Packages
   yum:
       name: "{{ item }}"
@@ -34,8 +45,11 @@
   loop:
     - unzip
     - php-json
+    - php-pdo_mysql
   when: 
       - os_check.stdout | regex_search("CentOS")
+
+
 
 - name: Extract invoice.ninja into /tmp
   unarchive:
@@ -68,7 +82,7 @@
       recurse: yes
       owner: nginx
       group: nginx
-      mode: '0755'
+      mode: '0777'
   when:
       - os_check.stdout | regex_search("CentOS")
 
@@ -144,4 +158,23 @@
   when:
     - os_check.stdout | regex_search("CentOS")
 
+- name: Restart the services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+    - php-fpm
+    - nginx
+  when:
+    - os_check.stdout | regex_search("CentOS")
+
+- name: Restart the services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+    - php{{ php_version }}-fpm
+    - nginx
+  when:
+    - os_check.stdout | regex_search("Ubuntu")
   
